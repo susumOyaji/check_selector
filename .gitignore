@@ -1,0 +1,11 @@
+/target
+
+
+
+
+
+#gemini
+#$ gemini          # 対話モードへ移行
+#> /chat save rust-session
+#> /chat list
+#> /chat resume check_selector
