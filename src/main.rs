@@ -1,102 +1,121 @@
 use scraper::{Html, Selector};
+use reqwest;
+use std::io;
+use std::collections::HashMap;
 
-fn main() {
-    let html_content = r#"
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <title>Test Page</title>
-        </head>
-        <body>
-            <div id="container">
-                <p class="item">First item</p>
-                <p class="item">Second item</p>
-                
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut targets = HashMap::new();
+    targets.insert("1", ("Dow Jones Industrial Average", "https://finance.yahoo.co.jp/quote/^DJI"));
+    targets.insert("2", ("Nikkei 225", "https://finance.yahoo.co.jp/quote/998407.O"));
+    targets.insert("3", ("Sony Group Corp.", "https://finance.yahoo.co.jp/quote/6758"));
+    targets.insert("4", ("USD/JPY", "https://finance.yahoo.co.jp/quote/USDJPY=FX"));
 
-                class="PriceBoard__main__1liM"><header class="PriceBoard__header__2Wi4"><div class="PriceBoard__nameBlock__3rFf"><h2 class="PriceBoard__name__166W">ソニーグループ(株)</h2>
-                </div></header><div id="industry" class="PriceBoard__mainHeader__3MRw target_modules"><span class="PriceBoard__code__SnMF">6758</span><a href="https://finance.yahoo.co.jp/search/qi/?ids=3650" class="PriceBoard__industryName__3vYM PriceBoard__industryName--link__Ahtz" data-cl-params="_cl_link:_;_cl_position:0">電気機器</a>
-                </div><div class="PriceBoard__priceInformation__78Tl"><div class="PriceBoard__priceBlock__1PmX"><span class="StyledNumber__1fof StyledNumber--vertical__2aoh PriceBoard__price__1V0k"><span class="StyledNumber__item__1-yu"><span class="StyledNumber__value__3rXW">3,533</span></span></span>
-                <div class="PriceChangeLabel__2Kf0 PriceChangeLabel--red__2zs-"><dl class="PriceChangeLabel__definition__3Jdj"><dt class="PriceChangeLabel__term__3H4k">前日比</dt><dd class="PriceChangeLabel__description__a5Lp"><span class="StyledNumber__1fof StyledNumber--horizontal__HwH8 PriceChangeLabel__prices__30Ey">
-                <span class="StyledNumber__item__1-yu PriceChangeLabel__primary__Y_ut"><span class="StyledNumber__value__3rXW">-33</span></span><span class="StyledNumber__item__1-yu StyledNumber__item--secondary__RTJc StyledNumber__item--small__2hJE PriceChangeLabel__secondary__3BXI">
-                <span class="StyledNumber__punctuation__3pWV">(</span><span class="StyledNumber__value__3rXW">-0.93</span><span class="StyledNumber__suffix__2SD5">%</span><span class="StyledNumber__punctuation__3pWV">)</span></span></span></dd></dl></div></div><div class="PriceBoard__mainFooter__16pO"><ul class="PriceBoard__times__3vyU">
-                <li class="PriceBoard__time__3ixW">リアルタイム株価</li><li class="PriceBoard__time__3ixW"><time>15:01</time></li></ul></div><div class="PriceBoard__rightContents__3abw">
-                 
-               
-            </div>
-                <a href="https://example.com">Link</a>
-            </div>
-            <div class="another-container">
-                <p>Another paragraph</p>
-            </div>
-        </body>
-        </html>
-    "#;
+    loop {
+        println!("
+どの金融商品の情報を取得しますか？番号を入力してください (終了するには'q'を入力):");
+        for (key, (name, _)) in &targets {
+            println!("{}: {}", key, name);
+        }
 
-    let document = Html::parse_document(html_content);
+        let mut choice = String::new();
+        io::stdin().read_line(&mut choice)?;
+        let choice = choice.trim();
 
-    // 例1: IDで要素を選択
-    let selector_id = Selector::parse("#container").unwrap();
-    println!("--- Selecting by ID: #container ---");
-    for element in document.select(&selector_id) {
-        println!("Found element: {}", element.html());
-    }
+        if choice == "q" {
+            break;
+        }
 
-    // 例2: クラスで要素を選択
-    let selector_class = Selector::parse(".item").unwrap();
-    println!("\n--- Selecting by Class: .item ---");
-    for element in document.select(&selector_class) {
-        println!("Found element text: {}", element.text().collect::<String>());
-    }
-
-    // 例3: タグ名と属性で要素を選択
-    let selector_a = Selector::parse("a[href]").unwrap();
-    println!("\n--- Selecting by Tag and Attribute: a[href] ---");
-    for element in document.select(&selector_a) {
-        if let Some(href) = element.value().attr("href") {
-            println!("Found link with href: {}", href);
+        if let Some((name, url)) = targets.get(choice) {
+            println!("
+--- {} の情報を取得中... ---", name);
+            fetch_and_display_data(url)?;
+        } else {
+            println!("無効な選択です。もう一度入力してください。");
         }
     }
 
-    // 例4: 存在しないセレクター
-    let selector_non_existent = Selector::parse(".non-existent").unwrap();
-    println!("\n--- Selecting non-existent class: .non-existent ---");
-    if document.select(&selector_non_existent).next().is_none() {
-        println!("No elements found for .non-existent");
+    Ok(())
+}
+
+fn fetch_and_display_data(url: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let html_content = reqwest::blocking::get(url)?.text()?;
+    let document = Html::parse_document(&html_content);
+
+    // 会社名・指数名のセレクター
+    let name_selector = Selector::parse("h2[class*=\"PriceBoard__name\"]").unwrap();
+    if let Some(element) = document.select(&name_selector).next() {
+        let name = element.text().collect::<String>();
+        println!("名称: {}", name);
     } else {
-        println!("Elements found for .non-existent (unexpected)");
+        println!("名称が見つかりませんでした。");
     }
 
-    // 例5: 特定のクラス名で数値要素を抽出し、変数に代入
-    let selector_number = Selector::parse(".StyledNumber__value__3rXW").unwrap();
-    println!("\n--- Extracting numbers and assigning to variables ---");
-    let numbers: Vec<String> = document
-        .select(&selector_number)
-        .map(|el| el.text().collect::<String>())
-        .collect();
-
-    if numbers.len() >= 3 {
-        // 1番目の数値をpriceに代入
-        let price: f64 = numbers[0].replace(',', "").parse().unwrap_or(0.0);
-
-        // 2番目の数値をpreviに代入
-        let previ: f64 = numbers[1].parse().unwrap_or(0.0);
-
-        // 3番目の数値をrateに代入
-        let rate: f64 = numbers[2].parse().unwrap_or(0.0);
-
-        println!("株価 (price): {}", price);
-        println!("前日比 (previ): {}", previ);
-        println!("騰落率 (rate): {}", rate);
+    // 更新時間のセレクター
+    let time_selector = Selector::parse("time").unwrap();
+    if let Some(element) = document.select(&time_selector).next() {
+        let update_time = element.text().collect::<String>();
+        println!("更新時間: {}", update_time);
     } else {
-        println!("Could not extract all three values.");
+        println!("更新時間が見つかりませんでした。");
     }
 
-    // 例6: ソニーグループ(株)を抜き出すセレクター
-    let selector_sony_group = Selector::parse(".PriceBoard__name__166W").unwrap();
-    println!("\n--- Extracting 'ソニーグループ(株)' ---");
-    for element in document.select(&selector_sony_group) {
-        let sony_text = element.text().collect::<String>();
-        println!("Extracted: {}", sony_text);
+    // USD/JPYの場合の特別な処理
+    if url.contains("USDJPY=FX") {
+        let bid_term_selector = Selector::parse("dt[class*=\"_FxPriceBoard__term\"]").unwrap();
+        let mut bid_price_found = false;
+        for dt_element in document.select(&bid_term_selector) {
+            if dt_element.text().collect::<String>().trim() == "Bid（売値）" {
+                if let Some(parent_dl_node) = dt_element.parent() {
+                    if let Some(parent_dl_element) = scraper::ElementRef::wrap(parent_dl_node) {
+                        let dd_selector = Selector::parse("dd[class*=\"_FxPriceBoard__description\"]").unwrap();
+                        if let Some(dd_element) = parent_dl_element.select(&dd_selector).next() {
+                            let price_span_selector = Selector::parse("span[class*=\"_FxPriceBoard__price\"]").unwrap();
+                            if let Some(price_span_element) = dd_element.select(&price_span_selector).next() {
+                                let bid_price_str = price_span_element.text().collect::<String>();
+                                let bid_price: f64 = bid_price_str.replace(",", "").parse().unwrap_or(0.0);
+                                println!("Bid（売値）: {}", bid_price);
+                                bid_price_found = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if !bid_price_found {
+            println!("Bid（売値）が見つかりませんでした。");
+        }
+    } else { // USD/JPY以外の場合の処理
+        // 価格のセレクター
+        let price_selector = Selector::parse("span[class*=\"PriceBoard__price\"] span[class*=\"StyledNumber__value\"]").unwrap();
+        if let Some(element) = document.select(&price_selector).next() {
+            let price_str = element.text().collect::<String>();
+            let price: f64 = price_str.replace(",", "").parse().unwrap_or(0.0);
+            println!("現在値: {}", price);
+        } else {
+            println!("現在値が見つかりませんでした。");
+        }
+
+        // 前日比と騰落率のセレクター
+        let change_selector = Selector::parse("div[class*=\"PriceChangeLabel\"] span[class*=\"StyledNumber__value\"]").unwrap();
+        let changes: Vec<String> = document
+            .select(&change_selector)
+            .map(|el| el.text().collect::<String>())
+            .collect();
+
+        if changes.len() >= 2 {
+            let previ_str = &changes[0];
+            let rate_str = &changes[1];
+
+            let previ: f64 = previ_str.parse().unwrap_or(0.0);
+            let rate: f64 = rate_str.parse().unwrap_or(0.0);
+
+            println!("前日比: {}", previ);
+            println!("騰落率: {}%", rate);
+        } else {
+            println!("前日比・騰落率が見つかりませんでした。");
+        }
     }
+
+    Ok(())
 }
