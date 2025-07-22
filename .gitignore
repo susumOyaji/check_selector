@@ -1,0 +1,22 @@
+/target
+
+
+
+
+
+#gemini
+#$ gemini          # 対話モードへ移行
+#> /chat save check_selector
+#> /chat list
+#> /chat resume check_selector
+
+#     * ソニーグループ(株) (6758) の場合:
+
+#   1         http://localhost:8081/quote/6758
+#       * USD/JPYの為替レートの場合:
+#   1         http://localhost:8081/quote/USDJPY=FX
+#       * 日経平均株価の場合:
+#   1         http://localhost:8081/quote/998407.O
+#       * ダウ平均株価の場合:
+
+#   1         http://localhost:8081/quote/^DJI

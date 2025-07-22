@@ -1,0 +1,97 @@
+/* 全体的なスタイル */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+h1, h3 {
+    color: #0056b3;
+}
+
+/* フォームのスタイル */
+form {
+    margin-bottom: 20px;
+}
+
+input[type="text"] {
+    padding: 8px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    padding: 8px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* カードコンテナのスタイル */
+#card-container {
+    display: flex; /* カードを横並びにする */
+    flex-wrap: wrap; /* 画面幅に合わせて折り返す */
+    gap: 20px; /* カード間のスペース */
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #eee;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 個々の金融カードのスタイル */
+.financial-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    flex: 1 1 calc(33% - 40px); /* 3列表示（gapを考慮） */
+    min-width: 280px; /* 最小幅 */
+    box-sizing: border-box; /* paddingとborderを幅に含める */
+}
+
+.financial-card h4 {
+    margin-top: 0;
+    color: #007bff;
+}
+
+.financial-card pre {
+    background-color: #eef;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto; /* 横スクロールが必要な場合に表示 */
+    white-space: pre-wrap; /* 長い文字列を折り返す */
+    word-break: break-all; /* 単語の途中で改行 */
+}
+
+/* 生データ表示エリアのスタイル */
+#raw-data-container {
+    margin-top: 30px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#raw-data-display {
+    background-color: #f0f0f0;
+    padding: 15px;
+    border-radius: 4px;
+    overflow-x: auto; /* 横スクロールが必要な場合に表示 */
+    white-space: pre-wrap; /* 長い文字列を折り返す */
+    word-break: break-all; /* 単語の途中で改行 */
+    font-family: 'Courier New', Courier, monospace; /* 等幅フォント */
+    font-size: 0.9em;
+    color: #333;
+}

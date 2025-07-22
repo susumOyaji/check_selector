@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URLから金融データを取得</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>データ取得ツール</h1>
+    <p>コード（例: 6758）を入力してください。</p>
+    <form id="code-form">
+        <input type="text" id="code-input" placeholder="6758" required>
+        <button type="submit">取得</button>
+    </form>
+    <h3>結果:</h3>
+    <div id="card-container"></div>
+
+    <h3>生データ:</h3>
+    <div id="raw-data-container"><pre id="raw-data-display"></pre></div>
+
+    <script src="main.js"></script>
+</body>
+</html>
